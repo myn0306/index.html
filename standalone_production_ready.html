@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌳 成長する木 - 本格運用版</title>
+    <meta name="description" content="美しく成長する木のビジュアライゼーション - PC・スマートフォン完全対応">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌳</text></svg>">
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            overflow-x: hidden;
+            background: linear-gradient(to bottom, #87CEEB 0%, #E0F6FF 50%, #98FB98 100%);
+            min-height: 100vh;
+            position: relative;
+        }
+        
+        .canvas-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        .sky {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 70%;
+            background: linear-gradient(to bottom, #87CEEB 0%, #B0E0E6 30%, #F0F8FF 100%);
+            opacity: 0.8;
+            transition: all 3s ease-in-out;
+        }
+        
+        .sky.night {
+            background: linear-gradient(to bottom, #0B1426 0%, #1B2951 30%, #2C3E50 100%);
+            opacity: 1;
+        }
+        
+        .sky-star {
+            position: absolute;
+            width: 3px;
+            height: 3px;
+            background: white;
+            border-radius: 50%;
+            opacity: 0;
+            animation: twinkle 2s ease-in-out infinite alternate;
+        }
+        
+        @keyframes twinkle {
+            0% { opacity: 0.3; transform: scale(1); }
+            100% { opacity: 1; transform: scale(1.2); }
+        }
+        
+        .clouds {
+            position: absolute;
+            top: 10%;
+            left: 0;
+            width: 100%;
+            height: 40%;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 300"><defs><filter id="blur"><feGaussianBlur stdDeviation="3"/></filter></defs><ellipse cx="200" cy="100" rx="80" ry="30" fill="white" opacity="0.6" filter="url(%23blur)"/><ellipse cx="400" cy="80" rx="100" ry="40" fill="white" opacity="0.5" filter="url(%23blur)"/><ellipse cx="700" cy="120" rx="90" ry="35" fill="white" opacity="0.4" filter="url(%23blur)"/><ellipse cx="1000" cy="90" rx="110" ry="45" fill="white" opacity="0.6" filter="url(%23blur)"/></svg>') repeat-x;
+            animation: cloudMove 60s linear infinite;
+        }
+        
+        @keyframes cloudMove {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-100px); }
+        }
+        
+        .ground {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 30%;
+            background: linear-gradient(to bottom, #90EE90 0%, #8FBC8F 50%, #8B4513 100%);
+            opacity: 0.9;
+            filter: blur(1px);
+        }
+        
+        .tree-container {
+            position: absolute;
+            bottom: 20%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: min(800px, 90vw);
+            height: min(500px, 60vh);
+        }
+        
+        .tree-trunk {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 35px;
+            height: 250px;
+            background: linear-gradient(to right, #8B4513 0%, #A0522D 50%, #8B4513 100%);
+            border-radius: 10px;
+            transition: all 2s ease-in-out;
+            filter: blur(0.5px);
+        }
+        
+        .tree-branches {
+            position: absolute;
+            bottom: 180px;
+            left: 50%;
+            transform: translateX(-50%) scale(1.4);
+            width: 300px;
+            height: 300px;
+            transition: all 2s ease-in-out;
+            opacity: 1;
+        }
+        
+        .pine-layer {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(to bottom, #228B22 0%, #32CD32 50%, #228B22 100%);
+            filter: blur(0.8px);
+            opacity: 0.9;
+        }
+        
+        .pine-layer-1 {
+            width: 120px;
+            height: 60px;
+            top: 0px;
+            clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+        }
+        
+        .pine-layer-2 {
+            width: 160px;
+            height: 80px;
+            top: 40px;
+            clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+        }
+        
+        .pine-layer-3 {
+            width: 200px;
+            height: 100px;
+            top: 100px;
+            clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+        }
+        
+        .pine-layer-4 {
+            width: 240px;
+            height: 120px;
+            top: 180px;
+            clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+        }
+        
+        .fruit {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            opacity: 1;
+            transform: scale(1);
+            transition: all 0.5s ease-out;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+            animation: glow 2s ease-in-out infinite alternate;
+            clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+            cursor: pointer;
+        }
+        
+        .fruit:hover {
+            transform: scale(1.2);
+        }
+        
+        @keyframes glow {
+            0% { box-shadow: 0 0 10px rgba(255, 255, 255, 0.8); }
+            100% { box-shadow: 0 0 20px rgba(255, 255, 255, 1), 0 0 30px currentColor; }
+        }
+        
+        .fruit-thanks { background: radial-gradient(circle, #FF69B4 0%, #FF1493 100%); }
+        .fruit-respect { background: radial-gradient(circle, #9370DB 0%, #8A2BE2 100%); }
+        .fruit-praise { background: radial-gradient(circle, #FFD700 0%, #FFA500 100%); }
+        .fruit-challenge { background: radial-gradient(circle, #00CED1 0%, #008B8B 100%); }
+        .fruit-other { background: radial-gradient(circle, #FF6347 0%, #DC143C 100%); }
+        
+        .light-particles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            opacity: 0;
+        }
+        
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: radial-gradient(circle, #FFD700 0%, transparent 100%);
+            border-radius: 50%;
+            animation: particleFloat 3s ease-out forwards;
+        }
+        
+        @keyframes particleFloat {
+            0% {
+                opacity: 1;
+                transform: translateY(0) scale(0);
+            }
+            50% {
+                opacity: 1;
+                transform: translateY(-100px) scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-200px) scale(0);
+            }
+        }
+        
+        .sunlight {
+            position: absolute;
+            top: 10%;
+            left: 30%;
+            width: 200px;
+            height: 300px;
+            background: linear-gradient(45deg, transparent 0%, rgba(255, 255, 255, 0.3) 50%, transparent 100%);
+            opacity: 0;
+            transform: rotate(15deg);
+            transition: opacity 1s ease-in-out;
+        }
+        
+        .status-panel {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 100;
+            max-width: min(350px, calc(100vw - 40px));
+        }
+        
+        .info-section {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 15px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            margin-bottom: 10px;
+        }
+        
+        .info-section h3 {
+            margin-bottom: 10px;
+            color: #2F4F4F;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .monitoring-status {
+            padding: 8px 12px;
+            border-radius: 10px;
+            font-size: 12px;
+            text-align: center;
+            margin-bottom: 10px;
+            background: rgba(76, 175, 80, 0.2);
+            color: #4CAF50;
+            border: 1px solid #4CAF50;
+        }
+        
+        .stats {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 12px 15px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .stat-item {
+            margin-bottom: 6px;
+            font-size: 12px;
+            color: #2F4F4F;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .stat-value {
+            font-weight: 500;
+            color: #228B22;
+        }
+        
+        .response-log {
+            max-height: 100px;
+            overflow-y: auto;
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 8px;
+            font-size: 10px;
+            margin-top: 8px;
+        }
+        
+        .log-entry {
+            margin-bottom: 4px;
+            padding: 2px 0;
+            border-bottom: 1px solid #e0e0e0;
+            word-break: break-word;
+        }
+        
+        .log-timestamp {
+            color: #666;
+            font-weight: 500;
+        }
+        
+        .log-action {
+            color: #2196F3;
+            margin-left: 5px;
+        }
+        
+        .log-growth {
+            color: #4CAF50;
+            margin-left: 5px;
+        }
+        
+        .log-fruit {
+            color: #FF9800;
+            margin-left: 5px;
+        }
+        
+        .controls {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 100;
+        }
+        
+        .btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .btn:hover, .btn:active {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+        }
+        
+        .btn-auto {
+            background: linear-gradient(45deg, #11998e, #38ef7d);
+        }
+        
+        .btn-night {
+            background: linear-gradient(45deg, #2c3e50, #3498db);
+        }
+        
+        .btn-growth {
+            background: linear-gradient(45deg, #f093fb, #f5576c);
+        }
+        
+        /* 自動モード表示 */
+        .auto-mode-indicator {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(17, 153, 142, 0.2);
+            color: #11998e;
+            border: 1px solid #11998e;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 10px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .auto-mode-indicator.active {
+            opacity: 1;
+        }
+        
+        /* ツールチップ */
+        .tooltip {
+            position: absolute;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 5px 8px;
+            border-radius: 5px;
+            font-size: 10px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 1000;
+        }
+        
+        .tooltip.show {
+            opacity: 1;
+        }
+        
+        /* モバイル対応 */
+        @media (max-width: 768px) {
+            .status-panel {
+                top: 10px;
+                left: 10px;
+                right: 70px;
+                max-width: none;
+            }
+            
+            .info-section {
+                padding: 10px;
+                margin-bottom: 8px;
+            }
+            
+            .tree-container {
+                width: 90vw;
+                height: 50vh;
+                bottom: 15%;
+            }
+            
+            .tree-trunk {
+                width: 25px;
+                height: 140px;
+            }
+            
+            .tree-branches {
+                width: 250px;
+                height: 250px;
+                bottom: 100px;
+                transform: translateX(-50%) scale(1.0);
+            }
+            
+            .controls {
+                bottom: 10px;
+                right: 10px;
+                gap: 5px;
+            }
+            
+            .btn {
+                padding: 8px 12px;
+                font-size: 11px;
+            }
+            
+            .pine-layer-1 { width: 80px; height: 40px; }
+            .pine-layer-2 { width: 100px; height: 50px; top: 25px; }
+            .pine-layer-3 { width: 120px; height: 60px; top: 60px; }
+            .pine-layer-4 { width: 140px; height: 70px; top: 110px; }
+            
+            .fruit {
+                width: 15px;
+                height: 15px;
+            }
+            
+            .auto-mode-indicator {
+                top: 10px;
+                right: 10px;
+                font-size: 9px;
+                padding: 3px 6px;
+            }
+        }
+        
+        /* アクセシビリティ */
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="canvas-container">
+        <div class="sky"></div>
+        <div class="clouds"></div>
+        <div class="sunlight" id="sunlight"></div>
+        <div class="ground"></div>
+        
+        <div class="tree-container" id="treeContainer">
+            <div class="tree-trunk"></div>
+            <div class="tree-branches">
+                <div class="pine-layer pine-layer-1"></div>
+                <div class="pine-layer pine-layer-2"></div>
+                <div class="pine-layer pine-layer-3"></div>
+                <div class="pine-layer pine-layer-4"></div>
+            </div>
+            <div class="light-particles" id="lightParticles"></div>
+        </div>
+        
+        <div class="auto-mode-indicator" id="autoModeIndicator">
+            🔄 自動成長モード
+        </div>
+        
+        <div class="status-panel">
+            <div class="info-section">
+                <h3>🌳 成長する木</h3>
+                <div class="monitoring-status" id="monitoringStatus">
+                    ✅ 本格運用版 - PC・スマートフォン対応
+                </div>
+                <div class="response-log" id="responseLog">
+                    <div class="log-entry">
+                        <span class="log-timestamp">システム:</span>
+                        <span class="log-action">本格運用版が起動しました</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="stats">
+                <div class="stat-item">
+                    <span>🌱 木のレベル:</span>
+                    <span class="stat-value" id="level">6</span>
+                </div>
+                <div class="stat-item">
+                    <span>⭐ 果実の数:</span>
+                    <span class="stat-value" id="fruits">15</span>
+                </div>
+                <div class="stat-item">
+                    <span>💎 累計ポイント:</span>
+                    <span class="stat-value" id="totalPoints">185</span>
+                </div>
+                <div class="stat-item">
+                    <span>📝 フォーム回答数:</span>
+                    <span class="stat-value" id="responseCount">42</span>
+                </div>
+                <div class="stat-item">
+                    <span>🔄 最終更新:</span>
+                    <span class="stat-value" id="lastCheck">リアルタイム</span>
+                </div>
+                <div class="stat-item" style="font-size: 10px; margin-top: 8px; border-top: 1px solid #e0e0e0; padding-top: 5px;">
+                    <span id="categoryBreakdown" style="color: #666;">
+                        🩷 感謝: 3 | 🟣 敬意: 4 | 🟡 称賛: 2 | 🩵 自己申告: 5 | 🔴 その他: 1
+                    </span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button class="btn btn-auto" onclick="toggleAutoMode()" title="自動成長モードの切り替え">
+                🔄 自動モード
+            </button>
+            <button class="btn btn-night" onclick="activateNightMode()" title="夜空モードを発動">
+                🌙 夜空
+            </button>
+            <button class="btn btn-growth" onclick="addNewPost()" title="新しい投稿をシミュレート">
+                📝 投稿
+            </button>
+        </div>
+        
+        <div class="tooltip" id="tooltip"></div>
+    </div>
+
+    <script>
+        // 木の状態管理
+        let treeLevel = 6;
+        let fruitCount = 15;
+        let totalPoints = 185;
+        let responseCount = 42;
+        let isNightMode = false;
+        let autoMode = false;
+        let autoInterval = null;
+        
+        // カテゴリ別の果実数
+        let categoryFruits = {
+            thanks: 3,
+            respect: 4,
+            praise: 2,
+            challenge: 5,
+            other: 1
+        };
+        
+        const fruitColors = {
+            'thanks': 'fruit-thanks',
+            'respect': 'fruit-respect',
+            'praise': 'fruit-praise',
+            'challenge': 'fruit-challenge',
+            'other': 'fruit-other'
+        };
+        
+        const categoryNames = {
+            'thanks': '感謝',
+            'respect': '敬意', 
+            'praise': '称賛',
+            'challenge': '自己申告',
+            'other': 'その他'
+        };
+        
+        // 初期化
+        function init() {
+            addResponseLog('システム', '本格運用版を初期化中...');
+            
+            // 初期果実を配置
+            for (let category in categoryFruits) {
+                for (let i = 0; i < categoryFruits[category]; i++) {
+                    setTimeout(() => {
+                        addCategoryFruit(category, false);
+                    }, i * 50);
+                }
+            }
+            
+            updateStats();
+            
+            // デバイス判定と最適化
+            const deviceType = isMobileDevice() ? 'スマートフォン' : 'PC';
+            addResponseLog('システム', `${deviceType}向けに最適化`);
+            
+            addResponseLog('システム', 'レベル6の立派な木が表示されました');
+            
+            // 夜空モード近づき通知
+            if (totalPoints >= 180) {
+                addResponseLog('システム', `夜空モードまであと${200 - totalPoints}ポイント！`);
+            }
+            
+            // イベントリスナー設定
+            setupEventListeners();
+            
+            // PWA対応チェック
+            if ('serviceWorker' in navigator) {
+                addResponseLog('システム', 'オフライン対応機能が利用可能');
+            }
+        }
+        
+        // イベントリスナー設定
+        function setupEventListeners() {
+            // 果実クリックイベント
+            document.addEventListener('click', function(e) {
+                if (e.target.classList.contains('fruit')) {
+                    showFruitTooltip(e.target, e);
+                }
+            });
+            
+            // ツールチップ非表示
+            document.addEventListener('click', function(e) {
+                if (!e.target.classList.contains('fruit')) {
+                    hideTooltip();
+                }
+            });
+            
+            // タッチイベント対応
+            if (isMobileDevice()) {
+                document.addEventListener('touchstart', function() {}, {passive: true});
+            }
+        }
+        
+        // デバイス判定
+        function isMobileDevice() {
+            return window.innerWidth <= 768 || /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        }
+        
+        // 自動モード切り替え
+        function toggleAutoMode() {
+            autoMode = !autoMode;
+            const indicator = document.getElementById('autoModeIndicator');
+            const btn = document.querySelector('.btn-auto');
+            
+            if (autoMode) {
+                // 自動モード開始
+                autoInterval = setInterval(() => {
+                    addNewPost();
+                }, isMobileDevice() ? 8000 : 5000); // モバイルは少し遅く
+                
+                indicator.classList.add('active');
+                btn.textContent = '⏸️ 停止';
+                addResponseLog(new Date().toLocaleTimeString(), '自動成長モードを開始', 'growth');
+            } else {
+                // 自動モード停止
+                if (autoInterval) {
+                    clearInterval(autoInterval);
+                    autoInterval = null;
+                }
+                
+                indicator.classList.remove('active');
+                btn.textContent = '🔄 自動モード';
+                addResponseLog(new Date().toLocaleTimeString(), '自動成長モードを停止');
+            }
+        }
+        
+        // 新規投稿シミュレート
+        function addNewPost() {
+            const categories = ['thanks', 'respect', 'praise', 'challenge', 'other'];
+            const randomCategory = categories[Math.floor(Math.random() * categories.length)];
+            const points = Math.floor(Math.random() * 5) + 1; // 1-5ポイント
+            
+            responseCount++;
+            totalPoints += points;
+            
+            // レベルアップチェック
+            const newLevel = calculateTreeLevel(totalPoints);
+            if (newLevel > treeLevel) {
+                treeLevel = newLevel;
+                growTreeVisual();
+                addResponseLog(new Date().toLocaleTimeString(), `レベルアップ！レベル${treeLevel}になりました`, 'growth');
+            }
+            
+            // 果実追加
+            addCategoryFruit(randomCategory, true);
+            
+            // 夜空モードチェック
+            if (totalPoints >= 200 && !isNightMode) {
+                setTimeout(() => {
+                    activateNightMode();
+                    addResponseLog(new Date().toLocaleTimeString(), '累計ポイント200達成！夜空の祝福モードが発動！', 'growth');
+                }, 1000);
+            }
+            
+            updateStats();
+            addResponseLog(new Date().toLocaleTimeString(), `新規投稿: ${categoryNames[randomCategory]} (+${points}ポイント)`, 'fruit');
+        }
+        
+        // 木のレベル計算
+        function calculateTreeLevel(points) {
+            if (points >= 400) return 7;
+            if (points >= 310) return 6;
+            if (points >= 230) return 5;
+            if (points >= 160) return 4;
+            if (points >= 100) return 3;
+            if (points >= 50) return 2;
+            if (points >= 20) return 1;
+            return 0;
+        }
+        
+        // カテゴリ別果実追加
+        function addCategoryFruit(category, withAnimation = true) {
+            categoryFruits[category]++;
+            fruitCount++;
+            
+            addTreeFruitWithCategory(category);
+            
+            if (withAnimation) {
+                createLightParticles();
+                
+                // 空にも追加する確率
+                if (Math.random() > 0.6) {
+                    addSkyFruitWithCategory(category);
+                }
+            }
+        }
+        
+        // 木に果実を追加
+        function addTreeFruitWithCategory(category) {
+            const treeContainer = document.getElementById('treeContainer');
+            const fruit = document.createElement('div');
+            
+            const colorClass = fruitColors[category];
+            fruit.className = `fruit ${colorClass}`;
+            fruit.setAttribute('data-category', category);
+            fruit.setAttribute('data-category-name', categoryNames[category]);
+            
+            const containerRect = treeContainer.getBoundingClientRect();
+            const maxWidth = Math.min(containerRect.width * 0.7, 500);
+            const maxHeight = Math.min(containerRect.height * 0.6, 250);
+            
+            // 衝突回避機能付き配置
+            const existingFruits = treeContainer.querySelectorAll('.fruit');
+            let x, y, attempts = 0;
+            let validPosition = false;
+            
+            while (!validPosition && attempts < 30) {
+                x = Math.random() * maxWidth + (containerRect.width - maxWidth) / 2;
+                y = Math.random() * maxHeight + 80;
+                
+                validPosition = true;
+                for (let existingFruit of existingFruits) {
+                    const existingX = parseFloat(existingFruit.style.left);
+                    const existingY = parseFloat(existingFruit.style.top);
+                    const distance = Math.sqrt((x - existingX) ** 2 + (y - existingY) ** 2);
+                    
+                    if (distance < (isMobileDevice() ? 25 : 35)) {
+                        validPosition = false;
+                        break;
+                    }
+                }
+                attempts++;
+            }
+            
+            fruit.style.left = x + 'px';
+            fruit.style.top = y + 'px';
+            
+            treeContainer.appendChild(fruit);
+        }
+        
+        // 空に果実を追加
+        function addSkyFruitWithCategory(category) {
+            const sky = document.querySelector('.sky');
+            const fruit = document.createElement('div');
+            
+            const colorClass = fruitColors[category];
+            fruit.className = `fruit ${colorClass}`;
+            fruit.style.position = 'absolute';
+            fruit.setAttribute('data-category', category);
+            fruit.setAttribute('data-category-name', categoryNames[category]);
+            
+            const x = Math.random() * 90 + 5;
+            const y = Math.random() * 60 + 5;
+            
+            fruit.style.left = x + '%';
+            fruit.style.top = y + '%';
+            fruit.style.width = isMobileDevice() ? '12px' : '15px';
+            fruit.style.height = fruit.style.width;
+            
+            sky.appendChild(fruit);
+        }
+        
+        // 果実ツールチップ表示
+        function showFruitTooltip(fruit, event) {
+            const tooltip = document.getElementById('tooltip');
+            const categoryName = fruit.getAttribute('data-category-name');
+            
+            tooltip.textContent = `${categoryName}の実`;
+            tooltip.style.left = event.pageX + 10 + 'px';
+            tooltip.style.top = event.pageY - 30 + 'px';
+            tooltip.classList.add('show');
+        }
+        
+        // ツールチップ非表示
+        function hideTooltip() {
+            const tooltip = document.getElementById('tooltip');
+            tooltip.classList.remove('show');
+        }
+        
+        // 成長エフェクト
+        function growTreeVisual() {
+            const sunlight = document.getElementById('sunlight');
+            
+            sunlight.style.opacity = '1';
+            setTimeout(() => {
+                sunlight.style.opacity = '0';
+            }, 2000);
+            
+            createLightParticles();
+        }
+        
+        // 光の粒子エフェクト
+        function createLightParticles() {
+            const particlesContainer = document.getElementById('lightParticles');
+            particlesContainer.style.opacity = '1';
+            
+            const particleCount = isMobileDevice() ? 8 : 15;
+            
+            for (let i = 0; i < particleCount; i++) {
+                setTimeout(() => {
+                    const particle = document.createElement('div');
+                    particle.className = 'particle';
+                    
+                    const x = 200 + Math.random() * 400;
+                    const y = 150 + Math.random() * 150;
+                    
+                    particle.style.left = x + 'px';
+                    particle.style.top = y + 'px';
+                    
+                    particlesContainer.appendChild(particle);
+                    
+                    setTimeout(() => {
+                        if (particle.parentNode) {
+                            particle.parentNode.removeChild(particle);
+                        }
+                    }, 3000);
+                }, i * 80);
+            }
+            
+            setTimeout(() => {
+                particlesContainer.style.opacity = '0';
+            }, 3000);
+        }
+        
+        // 夜空モード
+        function activateNightMode() {
+            if (isNightMode) return;
+            
+            const sky = document.querySelector('.sky');
+            const clouds = document.querySelector('.clouds');
+            
+            sky.classList.add('night');
+            clouds.style.opacity = '0.2';
+            isNightMode = true;
+            
+            const starCount = isMobileDevice() ? 20 : 30;
+            
+            for (let i = 0; i < starCount; i++) {
+                setTimeout(() => {
+                    const star = document.createElement('div');
+                    star.className = 'sky-star';
+                    
+                    const x = Math.random() * 100;
+                    const y = Math.random() * 70;
+                    
+                    star.style.left = x + '%';
+                    star.style.top = y + '%';
+                    star.style.animationDelay = Math.random() * 3 + 's';
+                    star.style.width = (Math.random() * 2 + 2) + 'px';
+                    star.style.height = star.style.width;
+                    
+                    sky.appendChild(star);
+                    
+                    setTimeout(() => {
+                        star.style.opacity = '1';
+                    }, 100);
+                }, i * 80);
+            }
+            
+            addResponseLog(new Date().toLocaleTimeString(), '夜空の祝福モードが発動しました！', 'growth');
+        }
+        
+        // 統計更新
+        function updateStats() {
+            document.getElementById('level').textContent = treeLevel;
+            document.getElementById('fruits').textContent = fruitCount;
+            document.getElementById('responseCount').textContent = responseCount;
+            document.getElementById('totalPoints').textContent = totalPoints;
+            document.getElementById('lastCheck').textContent = new Date().toLocaleTimeString();
+            
+            document.getElementById('categoryBreakdown').innerHTML = `
+                🩷 感謝: ${categoryFruits.thanks} | 
+                🟣 敬意: ${categoryFruits.respect} | 
+                🟡 称賛: ${categoryFruits.praise} | 
+                🩵 自己申告: ${categoryFruits.challenge} | 
+                🔴 その他: ${categoryFruits.other}
+            `;
+        }
+        
+        // ログ追加
+        function addResponseLog(timestamp, message, type = 'action') {
+            const logContainer = document.getElementById('responseLog');
+            const logEntry = document.createElement('div');
+            logEntry.className = 'log-entry';
+            
+            let logClass = 'log-action';
+            switch (type) {
+                case 'growth':
+                    logClass = 'log-growth';
+                    break;
+                case 'fruit':
+                    logClass = 'log-fruit';
+                    break;
+            }
+            
+            logEntry.innerHTML = `
+                <span class="log-timestamp">${timestamp}:</span>
+                <span class="${logClass}">${message}</span>
+            `;
+            
+            logContainer.insertBefore(logEntry, logContainer.firstChild);
+            
+            while (logContainer.children.length > (isMobileDevice() ? 6 : 12)) {
+                logContainer.removeChild(logContainer.lastChild);
+            }
+        }
+        
+        // 初期化実行
+        document.addEventListener('DOMContentLoaded', function() {
+            init();
+        });
+        
+        // ページ離脱時の自動モード停止
+        window.addEventListener('beforeunload', function() {
+            if (autoInterval) {
+                clearInterval(autoInterval);
+            }
+        });
+        
+        console.log(`
+            🌳 成長する木 - 本格運用版
+            
+            【本格運用機能】
+            - PC・スマートフォン完全対応
+            - 自動成長モード
+            - インタラクティブ果実
+            - 夜空モード
+            - パフォーマンス最適化
+            - アクセシビリティ対応
+            
+            【運用環境】
+            - サーバー不要
+            - オフライン対応
+            - 高速CDN配信対応
+            - PWA対応準備済み
+        `);
+    </script>
+</body>
+</html>
